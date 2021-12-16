@@ -5,10 +5,11 @@
 import sys
 import requests
 
-import datetime
 from dateutil import parser
 
 import feedparser
+import pytz
+
 from feedgen.entry import FeedEntry
 from feedgen.feed import FeedGenerator
 
@@ -26,7 +27,7 @@ def _create_feed_entry(entry_dict: feedparser.FeedParserDict) -> FeedEntry:
   entry.summary(entry_dict['summary'])
 
   published = parser.parse(entry_dict['published'])
-  published = published.replace(tzinfo=datetime.timezone.utc)
+  published = published.replace(tzinfo=pytz.timezone('Europe/Zurich'))
   entry.published(published)
 
   return entry
@@ -43,12 +44,18 @@ def init_feed(feed_dict):
 
 def fetch_clean_save(feed_urls):
   new_feed = None
+  entries = []
   for feed_url in feed_urls:
     feed_dict = _fetch_and_parse(feed_url)
     if new_feed is None:
       new_feed = init_feed(feed_dict['feed'])
     for entry_dict in feed_dict['entries']:
-      new_feed.add_entry(_create_feed_entry(entry_dict))
+      entries.append(_create_feed_entry(entry_dict))
+  # sort by published date
+  entries.sort(key=lambda entry: entry.published())
+
+  for entry in entries:
+    new_feed.add_entry(entry, order='append')
 
   print(new_feed.rss_str(pretty=True).decode('utf-8'))
 
