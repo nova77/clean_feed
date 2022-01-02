@@ -51,9 +51,8 @@ def fetch_clean_save(feed_urls):
       new_feed = init_feed(feed_dict['feed'])
     for entry_dict in feed_dict['entries']:
       entries.append(_create_feed_entry(entry_dict))
-  # sort by published date
-  entries.sort(key=lambda entry: entry.published())
-
+  # sort by published date: newest first
+  entries.sort(key=lambda entry: entry.published(), reverse=True)
   for entry in entries:
     new_feed.add_entry(entry, order='append')
 
