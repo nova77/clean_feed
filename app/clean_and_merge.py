@@ -26,11 +26,10 @@ def _create_feed_entry(entry_dict: feedparser.FeedParserDict) -> FeedEntry:
   published = parser.parse(entry_dict['published'])  # type: ignore
   published = published.replace(tzinfo=pytz.timezone('Europe/Zurich'))
   entry.published(published)
-
   return entry
 
 
-def _init_feed(feed_url, feed_dict):
+def _init_feed(feed_url, feed_dict) -> FeedGenerator:
   new_feed = FeedGenerator()
   new_feed.id(feed_url)
   new_feed.title(feed_dict['title'])
@@ -54,6 +53,3 @@ def clean_and_merge_feeds(feed_urls) -> Optional[FeedGenerator]:
   for entry in entries:
     new_feed.add_entry(entry, order='append')
   return new_feed
-
-  # print(new_feed.rss_str(pretty=True).decode('utf-8'))
-  

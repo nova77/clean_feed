@@ -3,64 +3,19 @@
 #  python clean_feed.py feed_url [feed_url ...]
 
 import sys
-import requests
-
-from dateutil import parser
-
-import feedparser
-import pytz
-
-from feedgen.entry import FeedEntry
-from feedgen.feed import FeedGenerator
+from app import clean_and_merge
 
 
-def _fetch_and_parse(url) -> feedparser.FeedParserDict:
-  r = requests.get(url)
-  return feedparser.parse(r.text)
+def main(feed_urls):
+  fg = clean_and_merge.clean_and_merge_feeds(feed_urls)
+  if not fg:
+    raise ValueError('Could not find anything')
 
-
-def _create_feed_entry(entry_dict: feedparser.FeedParserDict) -> FeedEntry:
-  entry = FeedEntry()
-  entry.id(entry_dict['id'])
-  entry.title(entry_dict['title'])
-  entry.link(href=entry_dict['link'])
-  entry.summary(entry_dict['summary'])
-
-  published = parser.parse(entry_dict['published'])
-  published = published.replace(tzinfo=pytz.timezone('Europe/Zurich'))
-  entry.published(published)
-
-  return entry
-
-
-def init_feed(feed_dict):
-  new_feed = FeedGenerator()
-  new_feed.title(feed_dict['title'])
-  new_feed.link(href=feed_dict['link'])
-  new_feed.description(feed_dict['description'])
-  new_feed.language(feed_dict['language'])
-  return new_feed
-
-
-def fetch_clean_save(feed_urls):
-  new_feed = None
-  entries = []
-  for feed_url in feed_urls:
-    feed_dict = _fetch_and_parse(feed_url)
-    if new_feed is None:
-      new_feed = init_feed(feed_dict['feed'])
-    for entry_dict in feed_dict['entries']:
-      entries.append(_create_feed_entry(entry_dict))
-  # sort by published date: newest first
-  entries.sort(key=lambda entry: entry.published(), reverse=True)
-  for entry in entries:
-    new_feed.add_entry(entry, order='append')
-
-  print(new_feed.rss_str(pretty=True).decode('utf-8'))
+  print(fg.rss_str(pretty=True).decode('utf-8'))
 
 
 if __name__ == "__main__":
   if len(sys.argv) < 2:
     print("Usage: clean_feed.py feed_url [feed_url ...]")
   else:
-    fetch_clean_save(sys.argv[1:])
+    main(sys.argv[1:])

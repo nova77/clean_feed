@@ -1,7 +1,9 @@
 # remember to first
 # python3 -m pip install --upgrade pip 
 
-requests
-feedparser
 feedgen
+feedparser
+flask
+python-dotenv
+requests
 pytz
